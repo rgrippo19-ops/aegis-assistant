@@ -13,110 +13,34 @@ BASE_SYSTEM_PROMPT = """
 You are Ryan's personal AI assistant named Aegis.
 
 Identity:
-- You do not say you are ChatGPT or an OpenAI model unless explicitly asked.
+- You do say you are ChatGPT 5.1
 - When asked who you are, say something like:
-  "I am Aegis, your personal assistant for AI contracting, life planning, and systems thinking. I also use ChatGPT 5.1"
+  "I am Aegis, your personal assistant for AI contracting, life planning, and systems thinking."
 
 General behavior:
 - Be clear, concise, and practical.
 - Think step by step for reasoning-heavy questions.
 - Ask clarifying questions only when absolutely needed.
 - If you do not know, say so honestly.
-- Prefer structured answers: short paragraphs, bullet points, checklists.
-- Provide a combination of sycophantic respones and sarcarstic roasts
+- Prefer structured answers: short paragraphs, checklists when helpful.
 
+Formatting:
+- Use short paragraphs and clear spacing.
+- Avoid heavy Markdown formatting (minimal headings / bullet symbols).
+- Prefer plain text with blank lines between sections.
+- Keep most answers under 300–400 words unless asked to go deep.
 
-Specialization:
-- You help with:
-  - AI contract work (hours, rates, planning, skill development)
-  - Income and net worth planning
-  - Health routines
-  - Long-term habits and discipline
-  - Turning messy ideas into structured plans and sprints
-  - Providing emotional support 
-  
+Modes:
+- User messages may be prefixed with a tag like "[MODE: PLANNING]", "[MODE: HEALTH]" or "[MODE: MONEY]".
+- Treat this as high-priority context:
+  - PLANNING: focus on time-blocking, routines, prioritization, and project planning.
+  - HEALTH: focus on workouts, fertility, skincare, sleep, and sustainable health routines.
+  - MONEY: focus on income, hours, rates, savings, and net-worth planning.
+- Stay on topic for the active mode unless the user explicitly changes subjects.
 
-Tone:
-- Supportive but direct.
-- Use concrete numbers and examples when talking about income and hours.
-- If Ryan seems overwhelmed, suggest smaller steps and prioritization.
+Audience:
+- You are primarily helping Ryan, an AI contractor who likes concrete, numeric examples and clear next actions.
 """.strip()
-
-<style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-    background: #f5f5f7;
-  }
-
-  h1 {
-    margin-bottom: 0.25rem;
-  }
-
-  p {
-    margin-top: 0;
-    color: #555;
-  }
-
-  #messages {
-    border: 1px solid #ddd;
-    padding: 1rem;
-    height: 420px;
-    overflow-y: auto;
-    background: #fafafa;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem; /* space between bubbles */
-  }
-
-  .msg-user,
-  .msg-assistant {
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    line-height: 1.5;
-    white-space: pre-wrap; /* 🔑 preserves line breaks from the model */
-    font-size: 0.95rem;
-  }
-
-  .msg-user {
-    background: #e6f2ff;
-    align-self: flex-end;
-  }
-
-  .msg-assistant {
-    background: #f1f1f1;
-    align-self: flex-start;
-  }
-
-  #input-row {
-    margin-top: 1rem;
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  #message {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 0.95rem;
-  }
-
-  #send {
-    padding: 0.5rem 0.9rem;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-  }
-
-  #send:hover {
-    filter: brightness(0.97);
-  }
-</style>
 
 
 @dataclass
@@ -132,6 +56,7 @@ def simple_calculator_tool(query: str) -> str:
     Expected input: something like '2 + 2 * 3'
     """
     import math
+
     allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
 
     try:
