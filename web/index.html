@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Assistant</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
+    #messages { border: 1px solid #ccc; padding: 1rem; height: 400px; overflow-y: auto; }
+    .msg-user { font-weight: bold; margin: 0.5rem 0; }
+    .msg-assistant { margin: 0.5rem 0 1rem 1rem; }
+    #input-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
+    #message { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>My Assistant</h1>
+  <div id="messages"></div>
+
+  <div id="input-row">
+    <input id="message" type="text" placeholder="Type a message..." />
+    <button id="send">Send</button>
+  </div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/chat"; // change to deployed URL later
+    const sessionId = "local-demo"; // later: generate per user
+
+    const messagesDiv = document.getElementById("messages");
+    const inputEl = document.getElementById("message");
+    const sendBtn = document.getElementById("send");
+
+    function appendMessage(role, text) {
+      const el = document.createElement("div");
+      el.className = role === "user" ? "msg-user" : "msg-assistant";
+      el.textContent = (role === "user" ? "You: " : "Assistant: ") + text;
+      messagesDiv.appendChild(el);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = "";
+      appendMessage("user", text);
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId, message: text }),
+        });
+        const data = await res.json();
+        appendMessage("assistant", data.reply);
+      } catch (err) {
+        appendMessage("assistant", "Error talking to server: " + err);
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
