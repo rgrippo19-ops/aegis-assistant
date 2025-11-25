@@ -2,59 +2,262 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Assistant</title>
+  <title>Aegis – Ryan's Assistant</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
-    #messages { border: 1px solid #ccc; padding: 1rem; height: 400px; overflow-y: auto; }
-    .msg-user { font-weight: bold; margin: 0.5rem 0; }
-    .msg-assistant { margin: 0.5rem 0 1rem 1rem; }
-    #input-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
-    #message { flex: 1; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem 3rem;
+      background: #f5f5f7;
+    }
+
+    h1 {
+      margin-bottom: 0.25rem;
+    }
+
+    p {
+      margin-top: 0;
+      color: #555;
+    }
+
+    #chat-container {
+      margin-top: 1rem;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Mode switch bar */
+    #mode-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-button {
+      border: 1px solid #ccc;
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .mode-button.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    #mode-description {
+      font-size: 0.85rem;
+      color: #666;
+      margin: 0 0 0.75rem 0;
+    }
+
+    #messages {
+      height: 380px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem; /* space between bubbles */
+      padding-right: 0.25rem;
+    }
+
+    .msg-user,
+    .msg-assistant {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      line-height: 1.5;
+      white-space: pre-wrap; /* preserve line breaks from the model */
+      font-size: 0.95rem;
+      max-width: 80%;
+    }
+
+    .msg-user {
+      background: #e6f2ff;
+      align-self: flex-end;
+    }
+
+    .msg-assistant {
+      background: #f1f1f1;
+      align-self: flex-start;
+    }
+
+    .msg-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: block;
+      opacity: 0.7;
+    }
+
+    #input-row {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #message {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+    }
+
+    #send {
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      background: #2563eb;
+      color: white;
+    }
+
+    #send:hover {
+      filter: brightness(0.97);
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: #777;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>My Assistant</h1>
-  <div id="messages"></div>
+  <h1>Aegis – Ryan's Assistant</h1>
+  <p>
+    Welcome! This page talks to your backend at
+    <code>https://aegis-assistant.onrender.com/chat</code>.
+    Anyone who opens this site can chat with Aegis.
+  </p>
 
-  <div id="input-row">
-    <input id="message" type="text" placeholder="Type a message..." />
-    <button id="send">Send</button>
+  <div id="chat-container">
+    <!-- Mode switch -->
+    <div id="mode-bar">
+      <button class="mode-button active" data-mode="planning">Planning</button>
+      <button class="mode-button" data-mode="health">Health</button>
+      <button class="mode-button" data-mode="money">Money</button>
+    </div>
+    <p id="mode-description">
+      Planning mode: focus on structuring time, projects, and routines.
+    </p>
+
+    <div id="messages"></div>
+
+    <div id="input-row">
+      <input id="message" type="text" placeholder="Type a message..." />
+      <button id="send">Send</button>
+    </div>
   </div>
 
+  <footer>
+    Built by Ryan · Powered by OpenAI · Backend on Render · Frontend on Netlify
+  </footer>
+
   <script>
-    const API_URL = "http://127.0.0.1:8000/chat"; // change to deployed URL later
-    const sessionId = "local-demo"; // later: generate per user
+    // Public API endpoint on Render
+    const API_URL = "https://aegis-assistant.onrender.com/chat";
+
+    let currentMode = "planning";
+    const sessionId = "local-demo"; // you can randomize this later
 
     const messagesDiv = document.getElementById("messages");
     const inputEl = document.getElementById("message");
     const sendBtn = document.getElementById("send");
+    const modeButtons = document.querySelectorAll(".mode-button");
+    const modeDescription = document.getElementById("mode-description");
 
     function appendMessage(role, text) {
       const el = document.createElement("div");
       el.className = role === "user" ? "msg-user" : "msg-assistant";
-      el.textContent = (role === "user" ? "You: " : "Assistant: ") + text;
+
+      const label = document.createElement("span");
+      label.className = "msg-label";
+      label.textContent = role === "user" ? "You" : "Aegis";
+
+      const body = document.createElement("div");
+      body.textContent = text;
+
+      el.appendChild(label);
+      el.appendChild(body);
+
       messagesDiv.appendChild(el);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      modeButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+
+      if (mode === "planning") {
+        modeDescription.textContent =
+          "Planning mode: focus on structuring time, projects, and routines.";
+      } else if (mode === "health") {
+        modeDescription.textContent =
+          "Health mode: focus on workouts, routines, fertility, skincare, and recovery.";
+      } else if (mode === "money") {
+        modeDescription.textContent =
+          "Money mode: focus on income, hours, rates, savings, and net worth planning.";
+      }
+
+      appendMessage(
+        "assistant",
+        `Switched to ${mode.toUpperCase()} mode. Ask me something in this area and I’ll stay focused on it.`
+      );
     }
 
     async function sendMessage() {
       const text = inputEl.value.trim();
       if (!text) return;
       inputEl.value = "";
+
+      // Show user message as typed
       appendMessage("user", text);
+
+      // Tag the message with the current mode for the backend
+      const modePrefixedText = `[MODE: ${currentMode.toUpperCase()}] ${text}`;
 
       try {
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, message: text }),
+          body: JSON.stringify({ session_id: sessionId, message: modePrefixedText }),
         });
+
+        if (!res.ok) {
+          appendMessage("assistant", "Error: " + res.status + " " + res.statusText);
+          return;
+        }
+
         const data = await res.json();
         appendMessage("assistant", data.reply);
       } catch (err) {
         appendMessage("assistant", "Error talking to server: " + err);
       }
     }
+
+    // Initial welcome message
+    appendMessage(
+      "assistant",
+      "Hi, I'm Aegis. Use the Planning / Health / Money modes above to guide what we focus on. What do you want to work on today?"
+    );
+
+    // Mode button click handlers
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
 
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => {
