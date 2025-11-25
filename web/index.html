@@ -72,8 +72,9 @@
     .msg-assistant {
       padding: 0.75rem 1rem;
       border-radius: 10px;
-      line-height: 1.5;
-      white-space: pre-wrap; /* preserve line breaks from the model */
+      line-height: 1.6;
+      white-space: pre-wrap;       /* keep \n as real line breaks */
+      overflow-wrap: break-word;   /* avoid overflow on long words/URLs */
       font-size: 0.95rem;
       max-width: 80%;
     }
@@ -176,6 +177,35 @@
     const modeButtons = document.querySelectorAll(".mode-button");
     const modeDescription = document.getElementById("mode-description");
 
+    // Format assistant text to enforce nicer line breaks and bullets
+    function formatAssistantText(text) {
+      // Section headers we often expect; ensure they are on their own lines
+      const headers = [
+        "TONIGHT'S OVERVIEW",
+        "WORKOUT",
+        "DINNER",
+        "SKINCARE",
+        "NEXT STEPS",
+        "PLAN",
+        "MONEY",
+        "HEALTH"
+      ];
+
+      headers.forEach((h) => {
+        const re = new RegExp(h + ":", "gi");
+        text = text.replace(re, "\n" + h.toUpperCase() + ":\n");
+      });
+
+      // Convert inline " - " bullets into separate lines
+      // e.g. "Overview: - a - b" -> "Overview:\n- a\n- b"
+      text = text.replace(/ - /g, "\n- ");
+
+      // Collapse 3+ blank lines into just 2
+      text = text.replace(/\n{3,}/g, "\n\n");
+
+      return text.trim();
+    }
+
     function appendMessage(role, text) {
       const el = document.createElement("div");
       el.className = role === "user" ? "msg-user" : "msg-assistant";
@@ -185,7 +215,13 @@
       label.textContent = role === "user" ? "You" : "Aegis";
 
       const body = document.createElement("div");
-      body.textContent = text;
+
+      let displayText = text;
+      if (role === "assistant") {
+        displayText = formatAssistantText(text);
+      }
+
+      body.textContent = displayText;
 
       el.appendChild(label);
       el.appendChild(body);
@@ -214,7 +250,8 @@
 
       appendMessage(
         "assistant",
-        `Switched to ${mode.toUpperCase()} mode. Ask me something in this area and I’ll stay focused on it.`
+        "Switched to " + mode.toUpperCase() +
+          " mode. Ask me something in this area and I will stay focused on it."
       );
     }
 
@@ -227,7 +264,7 @@
       appendMessage("user", text);
 
       // Tag the message with the current mode for the backend
-      const modePrefixedText = `[MODE: ${currentMode.toUpperCase()}] ${text}`;
+      const modePrefixedText = "[MODE: " + currentMode.toUpperCase() + "] " + text;
 
       try {
         const res = await fetch(API_URL, {
