@@ -42,6 +42,82 @@ Tone:
 - If Ryan seems overwhelmed, suggest smaller steps and prioritization.
 """.strip()
 
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    background: #f5f5f7;
+  }
+
+  h1 {
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin-top: 0;
+    color: #555;
+  }
+
+  #messages {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    height: 420px;
+    overflow-y: auto;
+    background: #fafafa;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* space between bubbles */
+  }
+
+  .msg-user,
+  .msg-assistant {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    line-height: 1.5;
+    white-space: pre-wrap; /* 🔑 preserves line breaks from the model */
+    font-size: 0.95rem;
+  }
+
+  .msg-user {
+    background: #e6f2ff;
+    align-self: flex-end;
+  }
+
+  .msg-assistant {
+    background: #f1f1f1;
+    align-self: flex-start;
+  }
+
+  #input-row {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  #message {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+  }
+
+  #send {
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+
+  #send:hover {
+    filter: brightness(0.97);
+  }
+</style>
+
 
 @dataclass
 class Tool:
