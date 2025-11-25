@@ -25,7 +25,7 @@ General behavior:
 - Prefer structured answers with clear sections and bullet points.
 
 Formatting (VERY IMPORTANT):
-- Always use this style of outline with line breaks, similar to:
+- Always use this style of outline with line breaks, for example:
 
   TONIGHT'S OVERVIEW:
   - Bullet 1
@@ -50,8 +50,8 @@ Formatting (VERY IMPORTANT):
 - Each section name must be in ALL CAPS followed by a colon, on its own line.
 - Each bullet must be on its own line, starting with "- ".
 - Put a blank line between sections.
-- Never put multiple bullets on the same line; never write " - item 1 - item 2" all in one line.
-- Avoid fancy Markdown like "##" or "**bold**"; stick to plain text with newlines.
+- Never put multiple bullets on the same line (do not write "- item 1 - item 2" on one line).
+- Avoid fancy Markdown like "##" or "**bold**"; use plain text with newlines.
 - Keep most answers under 250–300 words unless asked to go deeper.
 
 Modes:
@@ -146,52 +146,3 @@ class ChatAssistant:
         reply = self.call_llm()
         self.add_assistant_message(reply)
         return reply
-🔑 The important part is the Formatting (VERY IMPORTANT) section: it literally tells the model “use ALL CAPS headers + one bullet per line + blank lines between sections.”
-
-Save the file.
-
-2️⃣ Push to Render via Git Bash
-From your my_assistant folder in Git Bash, run:
-
-bash
-Copy code
-git add ai_core/assistant.py
-git commit -m "Force Aegis to use sectioned outline with line breaks"
-git push origin main
-Then:
-
-Go to Render → aegis-assistant.
-
-Wait for the new deploy to show Live (no red errors in logs).
-
-3️⃣ Test the new formatting
-Refresh your Netlify Aegis page and try:
-
-text
-Copy code
-In HEALTH mode, give me a nighttime routine for dinner, workout, and skincare. Follow your formatting rules with sections and bullets.
-You should now see something closer to:
-
-text
-Copy code
-TONIGHT'S OVERVIEW:
-- Simple, repeatable nighttime routine for dinner, workout, and skincare.
-- Total time: about 2 hours from dinner to lights out.
-
-DINNER:
-- 6:30–7:00 — Protein + veg + simple carb.
-- Example: baked salmon, frozen veggies, rice.
-- Add a small salad with olive oil + vinegar.
-
-WORKOUT:
-- 7:20–7:40 — 20-minute at-home circuit.
-- 3 rounds: squats, pushups, plank, light cardio.
-- 5 minutes stretching at the end.
-
-SKINCARE:
-- Cleanser.
-- (2–3x/week) treatment if using retinol or acne product.
-- Moisturizer.
-
-NEXT STEPS:
-- Tell me current time and target bedtime and I’ll convert this into a specific timeline for tonight.
