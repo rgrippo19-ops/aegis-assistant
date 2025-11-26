@@ -9,6 +9,8 @@ client = OpenAI()
 DEFAULT_MODEL = "gpt-5.1"
 DEFAULT_TEMPERATURE = 0.95
 
+DEFAULT_MAX_HISTORY_MESSAGES = 16
+
 BASE_SYSTEM_PROMPT = """
 You are Ryan's personal AI assistant named Aegis.
 
