@@ -60,7 +60,7 @@
     }
 
     #messages {
-      height: 380px;
+      height: 360px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -101,6 +101,7 @@
       margin-top: 1rem;
       display: flex;
       gap: 0.5rem;
+      align-items: center;
     }
 
     #message {
@@ -125,6 +126,42 @@
       filter: brightness(0.97);
     }
 
+    /* Thinking indicator */
+    #thinking {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #666;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .thinking-text {
+      opacity: 0.8;
+    }
+
+    .thinking-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2563eb;
+      animation: blink 1s infinite ease-in-out;
+    }
+
+    .thinking-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .thinking-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+
     footer {
       margin-top: 1.5rem;
       font-size: 0.8rem;
@@ -142,17 +179,25 @@
   </p>
 
   <div id="chat-container">
-    <!-- Mode switch -->
+    <!-- Mode switch (General + 3 modes) -->
     <div id="mode-bar">
-      <button class="mode-button active" data-mode="planning">Planning</button>
+      <button class="mode-button active" data-mode="general">General</button>
+      <button class="mode-button" data-mode="planning">Planning</button>
       <button class="mode-button" data-mode="health">Health</button>
       <button class="mode-button" data-mode="money">Money</button>
     </div>
     <p id="mode-description">
-      Planning mode: focus on structuring time, projects, and routines.
+      General mode: open-ended questions, brainstorming, and normal chat.
     </p>
 
     <div id="messages"></div>
+
+    <div id="thinking">
+      <span class="thinking-text">Aegis is thinking</span>
+      <span class="thinking-dot"></span>
+      <span class="thinking-dot"></span>
+      <span class="thinking-dot"></span>
+    </div>
 
     <div id="input-row">
       <input id="message" type="text" placeholder="Type a message..." />
@@ -168,7 +213,7 @@
     // Public API endpoint on Render
     const API_URL = "https://aegis-assistant.onrender.com/chat";
 
-    let currentMode = "planning";
+    let currentMode = "general";  // default: regular chat
     const sessionId = "local-demo"; // you can randomize this later
 
     const messagesDiv = document.getElementById("messages");
@@ -176,6 +221,7 @@
     const sendBtn = document.getElementById("send");
     const modeButtons = document.querySelectorAll(".mode-button");
     const modeDescription = document.getElementById("mode-description");
+    const thinkingEl = document.getElementById("thinking");
 
     // Format assistant text to enforce nicer line breaks and bullets
     function formatAssistantText(text) {
@@ -197,7 +243,6 @@
       });
 
       // Convert inline " - " bullets into separate lines
-      // e.g. "Overview: - a - b" -> "Overview:\n- a\n- b"
       text = text.replace(/ - /g, "\n- ");
 
       // Collapse 3+ blank lines into just 2
@@ -237,22 +282,21 @@
         btn.classList.toggle("active", btn.dataset.mode === mode);
       });
 
-      if (mode === "planning") {
+      if (mode === "general") {
+        modeDescription.textContent =
+          "General mode: open-ended questions, brainstorming, and normal chat.";
+      } else if (mode === "planning") {
         modeDescription.textContent =
           "Planning mode: focus on structuring time, projects, and routines.";
       } else if (mode === "health") {
         modeDescription.textContent =
-          "Health mode: focus on workouts, routines, fertility, skincare, and recovery.";
+          "Health mode: focus on workouts, routines, skincare, sleep, and recovery.";
       } else if (mode === "money") {
         modeDescription.textContent =
           "Money mode: focus on income, hours, rates, savings, and net worth planning.";
       }
 
-      appendMessage(
-        "assistant",
-        "Switched to " + mode.toUpperCase() +
-          " mode. Ask me something in this area and I will stay focused on it."
-      );
+      // No extra “mode switched” message; just silently switch context.
     }
 
     async function sendMessage() {
@@ -263,14 +307,22 @@
       // Show user message as typed
       appendMessage("user", text);
 
-      // Tag the message with the current mode for the backend
-      const modePrefixedText = "[MODE: " + currentMode.toUpperCase() + "] " + text;
+      // Build the payload text:
+      // - In GENERAL mode, just send the text.
+      // - In other modes, prefix with [MODE: ...].
+      const payloadText =
+        currentMode === "general"
+          ? text
+          : "[MODE: " + currentMode.toUpperCase() + "] " + text;
+
+      // Show thinking indicator
+      thinkingEl.style.display = "flex";
 
       try {
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, message: modePrefixedText }),
+          body: JSON.stringify({ session_id: sessionId, message: payloadText }),
         });
 
         if (!res.ok) {
@@ -282,13 +334,16 @@
         appendMessage("assistant", data.reply);
       } catch (err) {
         appendMessage("assistant", "Error talking to server: " + err);
+      } finally {
+        // Hide thinking indicator regardless of success/error
+        thinkingEl.style.display = "none";
       }
     }
 
     // Initial welcome message
     appendMessage(
       "assistant",
-      "Hi, I'm Aegis. Use the Planning / Health / Money modes above to guide what we focus on. What do you want to work on today?"
+      "Hi, I'm Aegis. Use General for normal questions, or switch to Planning / Health / Money to bias what we focus on. What do you want to work on today?"
     );
 
     // Mode button click handlers
